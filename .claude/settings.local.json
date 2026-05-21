@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"setInterval\\\\|setTimeout\\\\|cron\" /c/Users/PRITAM/OneDrive/Desktop/New_folder/cosec-web/backend --include=\"*.js\" ! -path \"*/node_modules/*\")"
+    ]
+  }
+}
