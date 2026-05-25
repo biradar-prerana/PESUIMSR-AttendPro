@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import EmailPreviewBanner from './components/EmailPreviewBanner';
 import Sidebar from './components/Layout/Sidebar';
 import Navbar from './components/Layout/Navbar';
 import Login from './pages/Login';
@@ -90,7 +89,6 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <EmailPreviewBanner />
         <AppRoutes />
         <Toaster position="top-right" toastOptions={{ duration: 3000, style: { borderRadius: 10, fontSize: 14 } }} />
       </BrowserRouter>

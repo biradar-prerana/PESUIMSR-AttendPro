@@ -9,15 +9,7 @@ api.interceptors.request.use(config => {
 });
 
 api.interceptors.response.use(
-  res => {
-    try {
-      const preview = res.headers && res.headers['x-email-preview-url'];
-      if (preview) {
-        try { localStorage.setItem('emailPreviewUrl', preview); } catch (e) { /* ignore */ }
-      }
-    } catch (e) {}
-    return res;
-  },
+  res => res,
   err => {
     if (err.response?.status === 401) {
       localStorage.removeItem('cosec_token');

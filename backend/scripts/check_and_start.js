@@ -42,17 +42,17 @@ function ensureEnv() {
 
   // Warn about SMTP
   if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS || !env.FROM_EMAIL) {
-    console.log('SMTP not fully configured — the app will fall back to Ethereal (preview) for emails.');
-    console.log('To enable real delivery set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS and FROM_EMAIL in .env');
+    console.log('SMTP not fully configured. Real emails will not be sent until SMTP is configured.');
+    console.log('For real delivery, use free Gmail SMTP: SMTP_HOST=smtp.gmail.com, SMTP_PORT=587, SMTP_SECURE=false, SMTP_USER=your Gmail, SMTP_PASS=Google App Password, FROM_EMAIL=your Gmail.');
   }
 }
 
 function startDev() {
   console.log('Starting backend dev server (npm run dev) ...');
-  const child = spawn(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'dev'], {
+  const child = spawn('npm', ['run', 'dev'], {
     cwd: root,
     stdio: 'inherit',
-    shell: false
+    shell: true
   });
 
   child.on('exit', code => process.exit(code));

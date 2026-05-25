@@ -93,14 +93,36 @@ router.post('/', upload.single('photo'), async (req, res) => {
           const html = `Hi ${emp.firstName || ''} ${emp.lastName || ''},<br/><br/>` +
             `Your employee account has been created. Your Employee ID is <b>${emp.employeeId || ''}</b>.<br/><br/>` +
             `Regards,<br/>HR Team`;
-          const mailInfo = await sendMail({ to: emp.email, subject, html });
-          if (mailInfo?.previewUrl) {
-            res.setHeader('X-Email-Preview-Url', mailInfo.previewUrl);
-          }
+          const text = `Hi ${emp.firstName || ''} ${emp.lastName || ''},\n\n` +
+            `Your employee account has been created. Your Employee ID is ${emp.employeeId || ''}.\n\n` +
+            `Regards,\nHR Team`;
+          await sendMail({ to: emp.email, subject, text, html });
         } catch (e) {
           console.error('Failed to send welcome email', e);
         }
       }
+
+      if (process.env.HR_EMAIL) {
+        try {
+          const subject = `New employee added: ${emp.firstName || ''} ${emp.lastName || ''}`;
+          const html = `A new employee record has been created:<br/><br/>` +
+            `Name: <b>${emp.firstName || ''} ${emp.lastName || ''}</b><br/>` +
+            `Employee ID: <b>${emp.employeeId || ''}</b><br/>` +
+            `Email: <b>${emp.email || 'N/A'}</b><br/>` +
+            `Department: <b>${emp.department || 'N/A'}</b><br/><br/>` +
+            `Regards,<br/>Attendance System`;
+          const text = `A new employee record has been created:\n\n` +
+            `Name: ${emp.firstName || ''} ${emp.lastName || ''}\n` +
+            `Employee ID: ${emp.employeeId || ''}\n` +
+            `Email: ${emp.email || 'N/A'}\n` +
+            `Department: ${emp.department || 'N/A'}\n\n` +
+            `Regards,\nAttendance System`;
+          await sendMail({ to: process.env.HR_EMAIL, subject, text, html });
+        } catch (e) {
+          console.error('Failed to send HR notification for new employee', e);
+        }
+      }
+
       res.status(201).json(emp);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -126,10 +148,7 @@ router.put('/:id', upload.single('photo'), async (req, res) => {
         const html = `Hi ${emp.firstName || ''} ${emp.lastName || ''},<br/><br/>` +
           'Your employee profile has been updated in the system.<br/><br/>' +
           'Regards,<br/>HR Team';
-        const mailInfo = await sendMail({ to: emp.email, subject, html });
-        if (mailInfo?.previewUrl) {
-          res.setHeader('X-Email-Preview-Url', mailInfo.previewUrl);
-        }
+        await sendMail({ to: emp.email, subject, html });
       } catch (e) {
         console.error('Failed to send update email', e);
       }

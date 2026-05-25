@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "start:checked": "node scripts/check_and_start.js"
+    "start:checked": "node scripts/check_and_start.js",
+    "test:email": "node scripts/send_test_email.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

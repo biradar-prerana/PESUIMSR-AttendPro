@@ -93,16 +93,32 @@ router.post('/mark', async (req, res) => {
           const html = `Hi ${employee.firstName || ''} ${employee.lastName || ''},<br/><br/>` +
             `You have successfully checked in at <b>${moment().format('HH:mm:ss')}</b> with status <b>${status}</b>.<br/><br/>` +
             `Regards,<br/>Attendance System`;
-          const mailInfo = await sendMail({ to: employee.email, subject, html });
-          if (mailInfo?.previewUrl) {
-            res.setHeader('X-Email-Preview-Url', mailInfo.previewUrl);
-          }
+          const text = `Hi ${employee.firstName || ''} ${employee.lastName || ''},\n\n` +
+            `You have successfully checked in at ${moment().format('HH:mm:ss')} with status ${status}.\n\n` +
+            `Regards,\nAttendance System`;
+          await sendMail({ to: employee.email, subject, text, html });
         } catch (e) {
           console.error('Failed to send check-in email', e);
         }
       }
       if (isLate) {
         await Alert.create({ type: 'Late CheckIn', severity: 'Low', message: `${employee.firstName} ${employee.lastName} checked in late`, employee: employee._id });
+        if (process.env.HR_EMAIL) {
+          try {
+            const subject = `Late check-in alert - ${employee.employeeId}`;
+            const html = `Employee <b>${employee.firstName} ${employee.lastName}</b> (${employee.employeeId}) checked in late at <b>${moment().format('HH:mm:ss')}</b>.<br/>` +
+              `Shift start time: <b>${shift ? shift.startTime : '09:00'}</b><br/>` +
+              `Status: <b>${status}</b><br/><br/>` +
+              `Regards,<br/>Attendance System`;
+            const text = `Employee ${employee.firstName} ${employee.lastName} (${employee.employeeId}) checked in late at ${moment().format('HH:mm:ss')}.\n` +
+              `Shift start time: ${shift ? shift.startTime : '09:00'}\n` +
+              `Status: ${status}\n\n` +
+              `Regards,\nAttendance System`;
+            await sendMail({ to: process.env.HR_EMAIL, subject, text, html });
+          } catch (e) {
+            console.error('Failed to send HR notification for late check-in', e);
+          }
+        }
         const io = req.app.get('io');
         io.emit('attendance_event', { type: 'late', employee: `${employee.firstName} ${employee.lastName}` });
       }
@@ -116,6 +132,21 @@ router.post('/mark', async (req, res) => {
       log.workingHours = parseFloat(workingHours.toFixed(2));
       if (log.status === 'Present' && workingHours < 4) log.status = 'Half Day';
       await log.save();
+
+      if (employee.email) {
+        try {
+          const subject = `Check-out confirmation - ${moment().format('YYYY-MM-DD')}`;
+          const html = `Hi ${employee.firstName || ''} ${employee.lastName || ''},<br/><br/>` +
+            `You have successfully checked out at <b>${moment(checkOut).format('HH:mm:ss')}</b>. Your total working hours today are <b>${log.workingHours}</b>.<br/><br/>` +
+            `Regards,<br/>Attendance System`;
+          const text = `Hi ${employee.firstName || ''} ${employee.lastName || ''},\n\n` +
+            `You have successfully checked out at ${moment(checkOut).format('HH:mm:ss')}. Your total working hours today are ${log.workingHours}.\n\n` +
+            `Regards,\nAttendance System`;
+          await sendMail({ to: employee.email, subject, text, html });
+        } catch (e) {
+          console.error('Failed to send check-out email', e);
+        }
+      }
     }
     const io = req.app.get('io');
     io.emit('attendance_event', { type, employee: `${employee.firstName} ${employee.lastName}`, time: new Date() });
