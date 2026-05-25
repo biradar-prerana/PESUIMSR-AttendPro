@@ -5,6 +5,7 @@ const path = require('path');
 const Employee = require('../models/Employee');
 const Department = require('../models/Department');
 const { protect } = require('../middleware/auth');
+const { sendMail } = require('../utils/mailer');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -85,7 +86,22 @@ router.post('/', upload.single('photo'), async (req, res) => {
       data.accessDoors = JSON.parse(data.accessDoors);
     }
     const emp = await Employee.create(data);
-    res.status(201).json(emp);
+      // Send welcome email if email is available
+      if (emp.email) {
+        try {
+          const subject = 'Welcome to the Company';
+          const html = `Hi ${emp.firstName || ''} ${emp.lastName || ''},<br/><br/>` +
+            `Your employee account has been created. Your Employee ID is <b>${emp.employeeId || ''}</b>.<br/><br/>` +
+            `Regards,<br/>HR Team`;
+          const mailInfo = await sendMail({ to: emp.email, subject, html });
+          if (mailInfo?.previewUrl) {
+            res.setHeader('X-Email-Preview-Url', mailInfo.previewUrl);
+          }
+        } catch (e) {
+          console.error('Failed to send welcome email', e);
+        }
+      }
+      res.status(201).json(emp);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -103,6 +119,22 @@ router.put('/:id', upload.single('photo'), async (req, res) => {
       .populate('department', 'name code')
       .populate('shift', 'name startTime endTime');
     if (!emp) return res.status(404).json({ message: 'Employee not found' });
+
+    if (emp.email) {
+      try {
+        const subject = 'Employee profile updated';
+        const html = `Hi ${emp.firstName || ''} ${emp.lastName || ''},<br/><br/>` +
+          'Your employee profile has been updated in the system.<br/><br/>' +
+          'Regards,<br/>HR Team';
+        const mailInfo = await sendMail({ to: emp.email, subject, html });
+        if (mailInfo?.previewUrl) {
+          res.setHeader('X-Email-Preview-Url', mailInfo.previewUrl);
+        }
+      } catch (e) {
+        console.error('Failed to send update email', e);
+      }
+    }
+
     res.json(emp);
   } catch (err) {
     res.status(400).json({ message: err.message });

@@ -26,12 +26,25 @@ node seed.js          # Creates admin user
 npm run dev           # Starts backend on :5000
 ```
 
+### Backend: Quick-start (checks & defaults)
+
+We provide a convenience startup script that checks required env vars and creates reasonable defaults for local development, then starts the backend.
+
+```bash
+cd cosec-web/backend
+npm install
+# Create or update .env with defaults and start dev server
+npm run start:checked
+```
+
 ### 2. Frontend Setup
 ```bash
 cd cosec-web/frontend
 npm install
 npm start             # Starts frontend on :3000
 ```
+
+Tip: Run the frontend in development mode (`npm start`) and open http://localhost:3000. In development the app will show an Email Preview banner at the top when the backend returns an Ethereal preview URL for sent emails.
 
 ### 3. Login
 - **URL**: http://localhost:3000

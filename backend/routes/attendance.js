@@ -7,6 +7,7 @@ const Alert = require('../models/Alert');
 const GeofenceZone = require('../models/GeofenceZone');
 const moment = require('moment');
 const { protect } = require('../middleware/auth');
+const { sendMail } = require('../utils/mailer');
 
 // Haversine distance in metres
 function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -85,6 +86,21 @@ router.post('/mark', async (req, res) => {
         employee: employee._id, date: today, checkIn: new Date(), status,
         checkInMethod: method, checkInDevice: deviceId, shift: shift?._id
       });
+      // send check-in notification email
+      if (employee.email) {
+        try {
+          const subject = `Check-in confirmation - ${moment().format('YYYY-MM-DD')}`;
+          const html = `Hi ${employee.firstName || ''} ${employee.lastName || ''},<br/><br/>` +
+            `You have successfully checked in at <b>${moment().format('HH:mm:ss')}</b> with status <b>${status}</b>.<br/><br/>` +
+            `Regards,<br/>Attendance System`;
+          const mailInfo = await sendMail({ to: employee.email, subject, html });
+          if (mailInfo?.previewUrl) {
+            res.setHeader('X-Email-Preview-Url', mailInfo.previewUrl);
+          }
+        } catch (e) {
+          console.error('Failed to send check-in email', e);
+        }
+      }
       if (isLate) {
         await Alert.create({ type: 'Late CheckIn', severity: 'Low', message: `${employee.firstName} ${employee.lastName} checked in late`, employee: employee._id });
         const io = req.app.get('io');
